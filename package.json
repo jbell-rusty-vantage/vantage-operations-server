@@ -1,0 +1,35 @@
+{
+  "name": "vantage-operations-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vantage Moving Operations and Analytics API",
+  "main": "api/index.ts",
+  "engines": { "node": "22.x" },
+  "packageManager": "pnpm@10.13.1",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --import tsx ops/dev-server.ts",
+    "dev:vercel": "vercel dev",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/app.test.ts src/config.test.ts src/db.test.ts",
+    "check": "pnpm typecheck && pnpm test",
+    "build": "pnpm typecheck"
+  },
+  "dependencies": {
+    "cors": "2.8.6",
+    "express": "5.2.1",
+    "helmet": "8.1.0",
+    "mongodb": "7.2.0",
+    "mongoose": "9.6.2",
+    "pino": "10.3.1",
+    "pino-http": "11.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/express-serve-static-core": "5.1.1",
+    "@types/node": "22.19.7",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3",
+    "vercel": "53.3.2"
+  }
+}

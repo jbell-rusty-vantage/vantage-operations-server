@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.vercel/
+.vercel_build_output/
+dist/
+coverage/
+*.log
+*.tsbuildinfo
+**/*service-account*.json
+**/client_secret*
+.DS_Store
+Thumbs.db
