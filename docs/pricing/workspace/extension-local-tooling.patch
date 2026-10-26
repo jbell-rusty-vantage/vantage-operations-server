@@ -1,0 +1,371 @@
+diff --git a/README.md b/README.md
+index ccfe4b5..a8ef15e 100644
+--- a/README.md
++++ b/README.md
+@@ -45,14 +45,74 @@ WXT watches files and rebuilds automatically. Reload the extension in the browse
+ 2. Open `chrome://extensions`
+ 3. Enable **Developer mode**
+ 4. Click **Load unpacked**
+-5. Select the folder: `.output/chrome-mv3`
++5. Select the folder: `.output/chrome-mv3-dev` for `pnpm dev`, or `.output/chrome-mv3` after `pnpm build`.
+ 
+ ### Firefox
+ 
+ 1. Run `pnpm dev:firefox`
+ 2. Open `about:debugging#/runtime/this-firefox`
+ 3. Click **Load Temporary Add-on**
+-4. Select any file inside `.output/firefox-mv2` (e.g. `manifest.json`)
++4. Select `manifest.json` inside `.output/firefox-mv2-dev` for `pnpm dev:firefox`, or `.output/firefox-mv2` after `pnpm build:firefox`.
++
++## Safe local extension smoke check
++
++`ops/local-extension-smoke.mjs` opens a fresh headed Chromium profile and serves
++an invented Granot form at `http://localhost:3411`. It sends the real extension
++`PING` and read-only `PARSE_TARIFF_ADJUSTMENT` messages and asserts the response.
++It does not sign in, read credentials, submit a form, or call Vantage APIs.
++Localhost is already included in the extension's existing URL permissions.
++
++Run `pnpm build` first. With Playwright available to Node:
++
++```powershell
++node ops/local-extension-smoke.mjs
++```
++
++If Playwright is supplied by the Codex bundled runtime, set
++`PLAYWRIGHT_MODULE` to its absolute `playwright/index.mjs` path. Set
++`GRANOT_CHROMIUM_PATH` to a Playwright Chromium `chrome.exe` when its installed
++version differs from Playwright's default. Branded Chrome can ignore extension
++sideload flags; use Playwright Chromium for this harness.
++
++Pass `--keep-open` to keep the isolated browser and fixture running after the
++assertions. Its CDP endpoint is `http://127.0.0.1:9223`; Ctrl+C closes both.
++Ports 3411 and 9223 must be free. The temporary profile is printed for cleanup
++and stays outside the repository. The harness never loads the saved customer
++HTML. WXT's separate hot-reload server uses port 3400.
++
++For a repeatable setup with the pinned Playwright dependency (Node 22+):
++
++```powershell
++pnpm install
++pnpm exec playwright install chromium
++pnpm build
++pnpm dev:browser
++```
++
++From another terminal, `pnpm browser:readiness` connects to that browser and
++checks only the synthetic form. `pnpm test:browser` launches and closes its own
++isolated browser instead; stop `dev:browser` first so the ports are free.
++
++`pnpm browser:readiness --inspect-current-job` reads exactly one already-open
++Granot Charges / Forms View tab. Open a supported job manually first. It sends
++only PING and the read-only parser message, checks CF/ZIP availability plus
++Distance and two state/ZIP pairs in the DOM, and prints booleans only. It does
++not navigate, change fields, calculate pricing or print customer values.
++
++`pnpm browser:readiness --live` explicitly opens a separate Granot login tab,
++completes the two login stages and checks extension PING. It stops at Main Menu;
++report/job navigation remains manual. This mode reads the local workspace
++`../agent_granot_credentials/.env` (override with `GRANOT_CREDENTIALS_FILE`).
++Supported aliases are `GRANOT_NETWORK_USERNAME` / `MAIN_LOGIN_USERNAME`,
++`GRANOT_NETWORK_PASSWORD` / `MAIN_LOGIN_PASSWORD`, `GRANOT_USERNAME` /
++`SPECIFIC_USERNAME`, and `GRANOT_PASSWORD` / `SPECIFIC_PASSWORD`. Process
++environment values take precedence. Credentials stay in memory and the login
++form; logs omit credentials, raw errors, page URLs, titles and customer values.
++Both connected modes preserve existing tabs and disconnect without closing
++the developer's browser. Live login requires the currently documented Granot
++form shape. Synthetic, live-login and current-job modes were verified on
++October 25, 2026; the current-job mode reads one sample and is not a claim of
++coverage across every Granot form variant.
+ 
+ ## Production build
+ 
+diff --git a/package.json b/package.json
+index 3394557..d053db1 100644
+--- a/package.json
++++ b/package.json
+@@ -14,11 +14,15 @@
+     "zip:firefox": "wxt zip -b firefox",
+     "compile": "tsc --noEmit",
+     "test": "vitest run",
+-    "test:watch": "vitest"
++    "test:watch": "vitest",
++    "dev:browser": "node ops/local-extension-smoke.mjs --keep-open",
++    "test:browser": "node ops/local-extension-smoke.mjs",
++    "browser:readiness": "node ops/granot-browser-readiness.mjs"
+   },
+   "devDependencies": {
+     "@types/webextension-polyfill": "^0.12.3",
+     "jsdom": "^29.1.1",
++    "playwright": "1.61.0",
+     "typescript": "^5.8.3",
+     "vitest": "^4.1.7",
+     "wxt": "^0.20.7"
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 8c6bc20..e85d078 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -18,6 +18,9 @@ importers:
+       jsdom:
+         specifier: ^29.1.1
+         version: 29.1.1
++      playwright:
++        specifier: 1.61.0
++        version: 1.61.0
+       typescript:
+         specifier: ^5.8.3
+         version: 5.9.3
+@@ -914,6 +917,11 @@ packages:
+     resolution: {integrity: sha512-eKpRKAovdpZtR1WopLHxlBWvAgPny3c4gX1G5Jhwmmw4XJj0ifSD5qB5TOo8hmA0wlRKDAOAhEE1yVPgs6Fgcg==}
+     engines: {node: '>=14.14'}
+ 
++  fsevents@2.3.2:
++    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
++    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
++    os: [darwin]
++
+   fsevents@2.3.3:
+     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
+     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+@@ -1411,6 +1419,16 @@ packages:
+   pkg-types@2.3.1:
+     resolution: {integrity: sha512-y+ichcgc2LrADuhLNAx8DFjVfgz91pRxfZdI3UDhxHvcVEZsenLO+7XaU5vOp0u/7V/wZ+plyuQxtrDlZJ+yeg==}
+ 
++  playwright-core@1.61.0:
++    resolution: {integrity: sha512-caX7TrY3Ml6egyDX0WUcTHDxodl/b51y5wJOdCEA36QviK/s2g081hvmGs8eaE3DWb6NYZQ6BjO/QkNRPenoPA==}
++    engines: {node: '>=18'}
++    hasBin: true
++
++  playwright@1.61.0:
++    resolution: {integrity: sha512-Z+7BeeqQPRRzklHsVFP4KTGIyMxKUmfeRA4WisM6G3/XW6nwGeX6fX9qYaDa+CiUqpOkb2f6X3nar05R3kSuJQ==}
++    engines: {node: '>=18'}
++    hasBin: true
++
+   postcss@8.5.14:
+     resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
+     engines: {node: ^10 || ^12 || >=14}
+@@ -2703,6 +2721,9 @@ snapshots:
+       jsonfile: 6.2.1
+       universalify: 2.0.1
+ 
++  fsevents@2.3.2:
++    optional: true
++
+   fsevents@2.3.3:
+     optional: true
+ 
+@@ -3187,6 +3208,14 @@ snapshots:
+       exsolve: 1.0.8
+       pathe: 2.0.3
+ 
++  playwright-core@1.61.0: {}
++
++  playwright@1.61.0:
++    dependencies:
++      playwright-core: 1.61.0
++    optionalDependencies:
++      fsevents: 2.3.2
++
+   postcss@8.5.14:
+     dependencies:
+       nanoid: 3.3.12
+diff --git a/ops/local-fixture.html b/ops/local-fixture.html
+new file mode 100644
+index 0000000..ca789a3
+--- /dev/null
++++ b/ops/local-fixture.html
+@@ -0,0 +1,13 @@
++<!doctype html>
++<html lang="en"><meta charset="utf-8"><title>Synthetic Granot development fixture</title>
++<h1>Synthetic Granot development fixture</h1>
++<p>Invented data. No login, submission, customer records, or remote resources.</p>
++<form name="theForm">
++<table>
++  <tr><td>Moving From</td><td>Moving To</td></tr>
++  <tr><td><table><tr><td class="FROMTO">Exampleville, NY 00501</td></tr></table></td><td><table><tr><td class="FROMTO">Sampleton, FL 33101</td></tr></table></td></tr>
++  <tr><td>Agent: SYNTHETIC</td></tr>
++  <tr><td>Initial Price:</td><td>450 cf</td><td><input name="I1PERCFLBS" value="3.25"> per cf</td><td><input name="I1TOTAL" value="1462.50"></td></tr>
++  <tr><td class="TD2">Distance: 1150 Miles</td></tr>
++</table>
++</form></html>
+diff --git a/ops/local-extension-smoke.mjs b/ops/local-extension-smoke.mjs
+new file mode 100644
+index 0000000..63aef7f
+--- /dev/null
++++ b/ops/local-extension-smoke.mjs
+@@ -0,0 +1,51 @@
++// Developer-only: fresh isolated profile, synthetic DOM, read-only messages.
++// Requires `pnpm build` and Playwright (PLAYWRIGHT_MODULE may select its package).
++import assert from 'node:assert/strict';
++import { createServer } from 'node:http';
++import { readFile, mkdtemp } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import { join, resolve } from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++const root = fileURLToPath(new URL('../', import.meta.url));
++const moduleName = process.env.PLAYWRIGHT_MODULE || 'playwright';
++const { chromium } = await import(moduleName.startsWith('.') || /^[A-Z]:/i.test(moduleName)
++  ? pathToFileURL(resolve(moduleName)).href : moduleName);
++const fixture = await readFile(new URL('./local-fixture.html', import.meta.url));
++const server = createServer((_request, response) => {
++  response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
++  response.end(fixture);
++});
++await new Promise(resolve => server.listen(3411, '127.0.0.1', resolve));
++const profile = await mkdtemp(join(tmpdir(), 'granot-extension-local-'));
++const extension = join(root, '.output', 'chrome-mv3');
++const context = await chromium.launchPersistentContext(profile, {
++  headless: false,
++  executablePath: process.env.GRANOT_CHROMIUM_PATH || undefined,
++  args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`, '--remote-debugging-port=9223', '--remote-debugging-address=127.0.0.1'],
++});
++try {
++  const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
++  const page = await context.newPage();
++  await page.goto('http://localhost:3411/mpcharge~chargeswc');
++  const result = await worker.evaluate(async () => {
++    const [tab] = await chrome.tabs.query({ url: 'http://localhost:3411/*' });
++    const ping = await chrome.tabs.sendMessage(tab.id, { type: 'PING' });
++    const parsed = await chrome.tabs.sendMessage(tab.id, { type: 'PARSE_TARIFF_ADJUSTMENT' });
++    return { pingOk: ping.ok, pageFound: parsed.pageFound, missing: parsed.missing, located: parsed.located };
++  });
++  assert.equal(result.pingOk, true);
++  assert.equal(result.pageFound, true);
++  assert.deepEqual(result.missing, []);
++  assert.equal(result.located.linehaulCubicFeet, 450);
++  assert.equal(result.located.pickupZone, '00501');
++  assert.equal(result.located.deliveryZone, '33101');
++  console.log(JSON.stringify({ ok: true, cdp: 'http://127.0.0.1:9223', profile, result }, null, 2));
++  if (process.argv.includes('--keep-open')) {
++    console.log('Browser retained for the developer. Ctrl+C closes this isolated browser and fixture server.');
++    await new Promise(resolve => process.once('SIGINT', resolve));
++  }
++} finally {
++  await context.close();
++  server.close();
++}
+diff --git a/ops/granot-browser-readiness.mjs b/ops/granot-browser-readiness.mjs
+new file mode 100644
+index 0000000..311ad70
+--- /dev/null
++++ b/ops/granot-browser-readiness.mjs
+@@ -0,0 +1,119 @@
++// Developer-only readiness checks. Never print page data, URLs, credentials or raw errors.
++import { readFile } from 'node:fs/promises';
++import { resolve } from 'node:path';
++import { pathToFileURL } from 'node:url';
++import { parseEnv } from 'node:util';
++
++const inspect = process.argv.includes('--inspect-current-job');
++const live = process.argv.includes('--live');
++let browser;
++try {
++  if (inspect && live) throw new Error('Choose one mode');
++  const moduleName = process.env.PLAYWRIGHT_MODULE || 'playwright';
++  const { chromium } = await import(/^[A-Z]:/i.test(moduleName) || moduleName.startsWith('.')
++    ? pathToFileURL(resolve(moduleName)).href : moduleName);
++  // Fixed loopback endpoint: do not send browser/session access to external hosts.
++  browser = await chromium.connectOverCDP('http://127.0.0.1:9223');
++  const context = browser.contexts()[0];
++  if (!context) throw new Error('No browser context');
++  const worker = context.serviceWorkers().find(worker => worker.url().startsWith('chrome-extension://'));
++  if (!worker) throw new Error('Extension service worker unavailable');
++  let page;
++  let selectedTabId;
++  if (inspect) {
++    const candidates = [];
++    for (const candidate of context.pages()) {
++      if (!candidate.url().startsWith('https://eagle.hellomoving.com/')) continue;
++      if (await candidate.locator('form[name="theForm"] input[name="I1PERCFLBS"]').count()) candidates.push(candidate);
++    }
++    if (candidates.length !== 1) throw new Error('Expected exactly one supported job');
++    page = candidates[0];
++  } else if (live) {
++    const envPath = process.env.GRANOT_CREDENTIALS_FILE || resolve('../agent_granot_credentials/.env');
++    const raw = await readFile(envPath, 'utf8');
++    const values = Object.fromEntries(Object.entries(parseEnv(raw)).filter(([name]) => /^(GRANOT_|MAIN_LOGIN|SPECIFIC)/.test(name)));
++    const get = (...names) => names.map(name => process.env[name] || values[name]).find(Boolean);
++    const networkUser = get('GRANOT_NETWORK_USERNAME', 'GRANOT_NETWORK_USER', 'MAIN_LOGIN_USERNAME', 'MAIN_LOGIN_USER');
++    const networkPassword = get('GRANOT_NETWORK_PASSWORD', 'MAIN_LOGIN_PASSWORD');
++    const user = get('GRANOT_USERNAME', 'GRANOT_USER', 'SPECIFIC_USERNAME', 'SPECIFIC_USER');
++    const password = get('GRANOT_PASSWORD', 'SPECIFIC_PASSWORD');
++    if (![networkUser, networkPassword, user, password].every(Boolean)) throw new Error('Required credential aliases missing');
++    page = await context.newPage();
++    // Capture this exact new tab before Granot's shared frameset URL duplicates
++    // an existing signed-in tab. URL-first selection after login is ambiguous.
++    await page.goto(`http://localhost:3411/mpcharge~chargeswc#live-readiness-${crypto.randomUUID()}`);
++    selectedTabId = await worker.evaluate(async url => {
++      const matches = (await chrome.tabs.query({})).filter(tab => tab.url === url);
++      if (matches.length !== 1) throw new Error('Ambiguous new tab');
++      return matches[0].id;
++    }, page.url());
++    await page.goto('https://eagle.hellomoving.com/vantage/admin.htm');
++    const loginFrame = await new Promise((resolve, reject) => {
++      const deadline = Date.now() + 15000;
++      const timer = setInterval(async () => {
++        try {
++          for (const frame of page.frames()) {
++            if (await frame.locator('input[name="LOGON_USER"]').count()) {
++              clearInterval(timer); resolve(frame); return;
++            }
++          }
++          if (Date.now() > deadline) { clearInterval(timer); reject(new Error('Login form unavailable')); }
++        } catch { clearInterval(timer); reject(new Error('Login form unavailable')); }
++      }, 100);
++    });
++    await loginFrame.locator('input[name="LOGON_USER"]').fill(networkUser);
++    await loginFrame.locator('input[name="PASSWORD"]').fill(networkPassword);
++    const save = loginFrame.locator('input[name="SAVEPASS"]');
++    if (await save.count()) await save.uncheck();
++    await loginFrame.locator('[name="LOGON"]').click();
++    await loginFrame.locator('input[name="USERNAME"]').waitFor({ state: 'visible' });
++    await loginFrame.locator('input[name="USERNAME"]').fill(user);
++    await loginFrame.locator('input[name="PASSWORD"]').fill(password);
++    await loginFrame.locator('[name="LOGON"]').click();
++    await loginFrame.locator('input[name="USERNAME"]').waitFor({ state: 'detached' });
++    // The outer frameset keeps its product title; Main Menu is the content frame.
++    await loginFrame.waitForFunction(() => document.title === 'Main Menu');
++  } else {
++    page = await context.newPage();
++    await page.goto(`http://localhost:3411/mpcharge~chargeswc#readiness-${crypto.randomUUID()}`);
++  }
++  // Use the exact selected tab only. Never return its URL or parser values.
++  const result = await worker.evaluate(async ({ url, inspect, live, selectedTabId }) => {
++    const tabs = await chrome.tabs.query({});
++    const candidates = tabs.filter(tab => tab.url === url && (selectedTabId === undefined || tab.id === selectedTabId));
++    if (candidates.length !== 1) throw new Error('Ambiguous target tab');
++    const id = candidates[0].id;
++    const ping = await chrome.tabs.sendMessage(id, { type: 'PING' });
++    if (live) return { extensionPing: ping.ok === true };
++    const parsed = await chrome.tabs.sendMessage(id, { type: 'PARSE_TARIFF_ADJUSTMENT' });
++    return {
++      extensionPing: ping.ok === true,
++      formFound: parsed.pageFound === true,
++      actualCf: typeof parsed.located?.linehaulCubicFeet === 'number',
++      pickupZip: Boolean(parsed.located?.pickupZone),
++      deliveryZip: Boolean(parsed.located?.deliveryZone),
++    };
++  }, { url: page.url(), inspect, live, selectedTabId });
++  if (inspect) {
++    result.dom = await page.evaluate(() => {
++      const normalize = value => (value || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
++      const cells = [...document.querySelectorAll('td.FROMTO')].filter(cell => !cell.querySelector('td'));
++      const locations = cells.filter(cell => /,\s*[A-Z]{2}\s+\d{5}(?:-\d{4})?\b/.test(normalize(cell.textContent)));
++      return {
++        form: document.querySelectorAll('form[name="theForm"]').length === 1,
++        mileage: [...document.querySelectorAll('td.TD2')].some(cell => /^Distance:\s*\d+(?:\.\d+)?\s*Miles$/i.test(normalize(cell.textContent))),
++        stateZipPairs: locations.length === 2,
++      };
++    });
++  }
++  if (!Object.values(result).filter(value => typeof value === 'boolean').every(Boolean)) throw new Error('Readiness check failed');
++  if (inspect && !Object.values(result.dom).every(Boolean)) throw new Error('DOM readiness check failed');
++  console.log(JSON.stringify({ ok: true, mode: inspect ? 'current-job-read-only' : live ? 'live-login' : 'synthetic', ...result }));
++  if (!inspect && !live) await page.close();
++} catch {
++  console.error(JSON.stringify({ ok: false, error: 'READINESS_FAILED', guidance: 'Check browser/fixture ports, extension loading, supported job selection or credential aliases. No page data or raw error was logged.' }));
++  process.exitCode = 1;
++} finally {
++  // CDP disconnect only; preserve the developer browser and all existing tabs.
++  if (browser) await browser.close();
++}

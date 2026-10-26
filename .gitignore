@@ -12,3 +12,4 @@ coverage/
 **/client_secret*
 .DS_Store
 Thumbs.db
+.local/

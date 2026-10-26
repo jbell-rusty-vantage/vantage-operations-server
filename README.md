@@ -10,6 +10,8 @@ The foundation is implemented: strict TypeScript, Express 5, the Vercel function
 
 ## Local development
 
+For the isolated development database and API, start with [the local stack guide](docs/local-development.md). `pnpm dev:stack` never loads production `.env` files. Open `moving-pricing.code-workspace` in Cursor or VS Code to work across Operations, Extension and Admin. The [implementation team packet](docs/pricing/workspace/LEAD-AGENT.md) contains the lead prompt, ownership boundaries and verification checklist.
+
 Use Node 22 and pnpm 10.13.1, matching the existing server's documented Node major and pnpm version.
 
 ```powershell

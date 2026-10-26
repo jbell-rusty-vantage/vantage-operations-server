@@ -4,7 +4,9 @@
   "private": true,
   "description": "Vantage Moving Operations and Analytics API",
   "main": "api/index.ts",
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "packageManager": "pnpm@10.13.1",
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx ops/dev-server.ts",
@@ -12,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test src/app.test.ts src/config.test.ts src/db.test.ts",
     "check": "pnpm typecheck && pnpm test",
-    "build": "pnpm typecheck"
+    "build": "pnpm typecheck",
+    "dev:stack": "node ops/local-stack.mjs"
   },
   "dependencies": {
     "cors": "2.8.6",

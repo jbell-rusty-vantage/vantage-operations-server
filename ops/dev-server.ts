@@ -12,3 +12,6 @@ function shutdown() {
 }
 process.once("SIGINT", shutdown);
 process.once("SIGTERM", shutdown);
+process.on("message", (message) => {
+  if (message === "shutdown") shutdown();
+});

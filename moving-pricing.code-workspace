@@ -1,0 +1,69 @@
+{
+  "folders": [
+    { "name": "Operations", "path": "." },
+    { "name": "Extension", "path": "../granot_sync_extensions_and_services" },
+    { "name": "Admin", "path": "../vantage-admin" },
+    { "name": "Main server reference", "path": "../vantage-main-server" }
+  ],
+  "settings": {
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.output": true,
+      "**/.local": true,
+      "**/.vercel": true
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Pricing local API and MongoDB",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["dev:stack"],
+        "options": { "cwd": "${workspaceFolder:Operations}" },
+        "problemMatcher": []
+      },
+      {
+        "label": "Verify pricing local stack",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["dev:stack", "--check"],
+        "options": { "cwd": "${workspaceFolder:Operations}" },
+        "problemMatcher": []
+      },
+      {
+        "label": "Check Operations",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["check"],
+        "options": { "cwd": "${workspaceFolder:Operations}" },
+        "problemMatcher": []
+      },
+      {
+        "label": "Extension browser and synthetic Granot fixture",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["dev:browser"],
+        "options": { "cwd": "${workspaceFolder:Extension}" },
+        "problemMatcher": []
+      },
+      {
+        "label": "Verify extension reads current Granot job",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["browser:readiness", "--inspect-current-job"],
+        "options": { "cwd": "${workspaceFolder:Extension}" },
+        "problemMatcher": []
+      },
+      {
+        "label": "Check Extension types",
+        "type": "shell",
+        "command": "pnpm",
+        "args": ["compile"],
+        "options": { "cwd": "${workspaceFolder:Extension}" },
+        "problemMatcher": []
+      }
+    ]
+  }
+}
