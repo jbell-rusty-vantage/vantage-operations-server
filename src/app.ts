@@ -10,12 +10,15 @@ import { readConfig, SERVICE_NAME, type RuntimeConfig } from "./config";
 import { createDatabaseReadinessCheck } from "./db";
 import { createHttpLogger, createLogger } from "./logger";
 import { requireApiSecret } from "./middleware/require-api-secret";
+import { MongoHealthService } from './services/mongo-health/service';
+import { mongoHealthRouter } from './services/mongo-health/router';
 
 interface AppOptions {
   config?: RuntimeConfig;
   checkDatabase?: () => Promise<void>;
   pricingStore?: PricingStore;
   pricingAuth?: AuthOptions;
+  mongoHealth?: MongoHealthService;
 }
 
 export function createApp(options: AppOptions = {}) {
@@ -48,6 +51,12 @@ export function createApp(options: AppOptions = {}) {
     }
   });
   const connectMongo = createMongoConnection(config);
+  const mongoHealth = options.mongoHealth ?? new MongoHealthService(async () => {
+    await connectMongo();
+    if (!mongoose.connection.db) throw new Error('Database unavailable');
+    return mongoose.connection.db;
+  });
+  app.use('/api/v1/mongo-health', mongoHealthRouter(mongoHealth, config.operationsAdminSigningSecret));
   const pricingStore = options.pricingStore ?? new PricingStore(async () => {
     await connectMongo();
     if (!mongoose.connection.db) throw new Error('Database unavailable');

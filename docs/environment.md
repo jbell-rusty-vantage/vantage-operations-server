@@ -27,6 +27,8 @@ These names are read by the implemented pricing boundary. Missing values deny th
 
 The Admin inventory is `vantage-admin/docs/knowledge/environment.md`. Use the same dedicated, environment-specific `OPERATIONS_ADMIN_SIGNING_SECRET` on Admin and Operations only. The extension has an explicit Operations origin and host permission, but no server secret or copied token-signing key. Configure exact extension origins in `CORS_ALLOWED_ORIGINS` at deployment.
 
+Mongo Health also uses this dedicated signing key, with a separate `mongo-health` assertion scope and a strict read-only route allowlist. It adds no environment variables or Atlas Admin API credential requirement. [Metric and access contract](mongo-health.md).
+
 The `pricing:setup` CLI reads this inventory from its explicitly supplied process environment, including optional `MONGO_DNS_SERVERS`; it does not load `.env`. It requires `--database=<configured database>` even in report-only mode. See [release/run instructions](pricing/workspace/RELEASE.md).
 
 ## Main-server environment mapping

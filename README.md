@@ -31,6 +31,8 @@ Tests inject configuration and mock database calls. They do not load `.env`, con
 
 ## HTTP surface
 
+Owner-only Admin → Systems Mongo Health reads live database and collection metadata from this server. [API, auth, caching and metric limits](docs/mongo-health.md).
+
 | Route | Access | Purpose |
 | --- | --- | --- |
 | `GET /` | Public | Service banner |
