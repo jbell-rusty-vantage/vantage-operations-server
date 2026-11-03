@@ -10,6 +10,7 @@ Supporting documents:
 - [Database recommendation](../DATABASE-DECISION.md): same cluster versus same database, ownership and backup implications.
 - [Deployment evidence](../DEPLOYMENT.md): current scaffold status and checks.
 - [Environment inventory](../environment.md): configuration the user supplies.
+- [Unspecified workflows](UNSPECIFIED-WORKFLOWS.md): the user's acknowledged Sales rep lock-in submission and final document write gaps; no writeback is claimed.
 
 ## Boundaries
 
@@ -23,4 +24,4 @@ flowchart LR
   Existing[Existing main server domains] -->|Existing collections| Mongo
 ```
 
-Scaffolding and deployment are complete. Pricing runtime, Owner controls and extension changes are not implemented by this packet. Commercial defaults that the Owner has not supplied or approved remain explicitly marked for decision; illustrative prices are never production seed data.
+The pricing runtime, Owner controls and extension workspace are implemented locally and reconciled on October 26, 2026. Operations and Admin were deployed October 26, 2026; production control remains disabled with no active revision. Extension release status is recorded in the runbook. See the [implementation ledger](workspace/IMPLEMENTATION-CHECKLIST.md), [independent QA](workspace/QA-EVIDENCE.md), and [local/release runbook](workspace/RELEASE.md). Commercial defaults remain proposals until approved; illustrative prices are never production seed data.

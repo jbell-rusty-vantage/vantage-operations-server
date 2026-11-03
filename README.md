@@ -1,12 +1,12 @@
 # Vantage Moving Operations and Analytics
 
-A separate Express API deployed to its own Vercel project. The first planned feature is the Owner's transportation pricing calculator for the Granot browser extension.
+A separate Express API with its own Vercel project. Its first feature is the Owner's transportation pricing calculator for the Granot browser extension.
 
 This service uses the existing Atlas deployment and production database, `vantagemovers`. It does not replace `vantage-main-server`, migrate existing functionality, or create another production database. The current main server remains the owner of its existing domains and collections.
 
 ## Current state
 
-The foundation is implemented: strict TypeScript, Express 5, the Vercel function entrypoint, JSON logging, security headers, explicit CORS, lazy pooled Mongoose connections, protected database readiness, and offline tests. No pricing API, production rate seed, authentication migration, or analytics jobs are implemented. No database collections are created by startup or health checks.
+The foundation and transportation pricing feature are implemented locally: decimal-safe calculation, protected APIs, versioned drafts/revisions, publication transactions, preview warnings, enable/disable and restore. The sibling Admin and extension implement Owner configuration and server-backed read/display/copy. Operations and the Admin pricing management page were deployed October 26, 2026. Production pricing collections are initialized disabled/null; no rates were seeded or calculations enabled. No database collections are created by startup or health checks. See [verification](docs/pricing/workspace/IMPLEMENTATION-CHECKLIST.md) and [local/release instructions](docs/pricing/workspace/RELEASE.md).
 
 ## Local development
 
@@ -21,7 +21,7 @@ Copy-Item .env.example .env
 pnpm dev
 ```
 
-The API listens on `http://localhost:3001` to avoid colliding with the existing server. The public banner and liveness probe work before credentials are supplied. MongoDB connects only for a readiness check or a future feature that explicitly requests it.
+The API listens on `http://localhost:3001` to avoid colliding with the existing server. The public banner and liveness probe work before credentials are supplied. MongoDB connects only for a readiness check or a pricing operation that explicitly requests it.
 
 ```powershell
 pnpm check
@@ -36,10 +36,12 @@ Tests inject configuration and mock database calls. They do not load `.env`, con
 | `GET /` | Public | Service banner |
 | `GET /health` | Public | Process liveness, independent of MongoDB |
 | `GET /api/v1/health/ready` | Server-only `x-api-secret` | Establish the MongoDB connection and run `ping` |
+| `POST /api/v1/pricing/calculate` | Current eligible Extension User or signed Owner | Calculate from one enabled immutable revision |
+| `/api/v1/pricing/configuration`, `/revisions`, `/drafts`, `/activate`, `/enabled` | Signed current Admin Owner | Configuration lifecycle; exact methods in the specification |
 
-The readiness route returns 503 if auth or MongoDB is unconfigured or unavailable, and 401 for a missing or incorrect secret when configured. Responses do not expose the connection string, database host, or driver errors. Unknown routes return JSON 404s. Future feature routers install their own actor authentication and input parsing in `src/app.ts`; the diagnostic secret guards only readiness.
+The readiness route returns 503 if auth or MongoDB is unconfigured or unavailable, and 401 for a missing or incorrect secret when configured. Responses do not expose the connection string, database host, or driver errors. Unknown routes return JSON 404s. Pricing installs its own actor authentication and input parsing in `src/app.ts`; the diagnostic secret guards only readiness.
 
-`x-api-secret` is an initial server-to-server boundary, not browser-extension authentication. Do not distribute its value in an extension or frontend. Before adding a pricing route, settle the existing Extension User session validation and Admin signed-actor contract in [the pricing plan](docs/pricing/PLAN.md).
+`x-api-secret` is a diagnostic server-to-server boundary, not browser-extension authentication. Do not distribute its value in an extension or frontend. Pricing validates each Extension User token with the existing main-server authority and verifies dedicated Admin assertions; see [the specification](docs/pricing/SPECIFICATION.md).
 
 ## Deployment
 
@@ -56,10 +58,10 @@ See [deployment evidence](docs/DEPLOYMENT.md) and [database placement recommenda
 ## Module boundaries
 
 - `api/index.ts` exports the app; only `ops/dev-server.ts` listens on a port.
-- `src/app.ts` owns HTTP composition. Future routes validate inputs and call services.
+- `src/app.ts` owns HTTP composition. Pricing routes validate inputs and call services.
 - `src/config.ts` owns environment parsing. Read `docs/environment.md` before adding names.
 - `src/db.ts` owns the lazy Mongoose connection and readiness ping. Each warm instance uses a pool capped at five connections, with automatic index and collection creation disabled.
-- `src/services/` will hold new Moving Operations and Analytics behavior as it is implemented. Do not import runtime modules from sibling repositories.
-- Existing main-server collections and invariants remain under that server's ownership. New pricing collections will have explicit `moving_pricing_*` names, defined when persistence is implemented.
+- `src/services/pricing/` owns arithmetic, schema validation, preview, actor verification, explicit setup and transactional persistence. Do not import runtime modules from sibling repositories.
+- Existing main-server collections and invariants remain under that server's ownership. Operations writes only its four explicit `moving_pricing_*` collections. Deliberate `pricing:setup` report/apply is separate from startup.
 
-Deployment rollback is independent: disable or redeploy this Vercel project. No existing route has been redirected here and no data migration needs reversing.
+Deployment rollback is independent. Disable calculations first; restore an approved immutable pricing revision or redeploy code separately. No main-server route is redirected here and no existing-domain data migration needs reversing. See the [release runbook](docs/pricing/workspace/RELEASE.md).

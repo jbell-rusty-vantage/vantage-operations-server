@@ -1,6 +1,6 @@
 # Implementation checklist and release gates
 
-Status: preparation only, 2026-10-25. No pricing runtime is implemented by this packet. Checkboxes require actual evidence, not planned commands. Full policy/API details remain in [SPECIFICATION.md](../SPECIFICATION.md) and [EXTENSION.md](../EXTENSION.md).
+Status: local implementation reconciled and verified 2026-10-26. User subsequently authorized deployment of Operations, Admin and the extension; Operations/Admin deployment and disabled/null collection setup completed; extension store release is tracked in RELEASE.md. Checkboxes record local evidence, not production approval. Full policy/API details remain in [SPECIFICATION.md](../SPECIFICATION.md) and [EXTENSION.md](../EXTENSION.md).
 
 ## Vertical slices
 
@@ -18,23 +18,31 @@ Status: preparation only, 2026-10-25. No pricing runtime is implemented by this 
 
 ## Required verification ledger
 
-- [ ] Operations `pnpm check` passes with no `.env` loading or network calls in default tests.
-- [ ] Mileage edges 100/300/750/1250/1800/2500/3000 at +/-0.0001, zero and open band; volume edges 300/500/1000/1500/2000/3000 at +/-0.0001; below-minimum and max bounds.
-- [ ] All 56 positions; pickup/delivery/neither/both/same state; inactive pickup, explicit-zero pickup and missing selected pickup tier; duplicate active membership fails.
-- [ ] Decimal-safe final-only half-up rounding including `300.5 * 0.0100 = 3.01`; max product; malformed/unknown/numeric/exponent/overprecision input rejection; leading-zero ZIP preserved.
-- [ ] DOCX examples A/B pass as explicitly offline illustrative fixtures; no example production seed path exists.
-- [ ] Nonproduction replica-set setup proves validators/indexes and transaction support; competing edits/publishes/disable, each transaction abort point and unknown commit retry leave no partial state.
-- [ ] Same operation ID/body/actor returns saved success before stale-version rejection; changed actor/body conflicts. Preview acknowledgement cannot survive changed draft/control/hash.
-- [ ] Calculation during publish returns coherent old/new revision; disabled/null/corrupt configuration never falls back to draft, old rates or zero success.
-- [ ] Extension authority deadline/body bounds/no redirect/no positive cache; upstream 401 vs outage; changed account/email/role/token version, invalid JWT and role unions.
-- [ ] Admin signature body/method/target/query/audience/timestamp tampering and replay behavior; stale current session/non-Owner/CSRF denied; old registry assertion rejected.
-- [ ] Extension `pnpm compile`, focused `pnpm test -- <files>`, `pnpm build`, `pnpm build:firefox`; recheck actual package scripts before execution.
-- [ ] Parser tests cover NBSP, decimals, ZIP5/ZIP+4, nested headings, pounds-only, missing units, duplicate/conflicting forms and misleading rate/summary/inventory/maps values; use invented data and inert scripts only.
-- [ ] Frame/tab/navigation/document changes, out-of-order responses, mutation before calculate/copy, logout, visibility bootstrap, 401 refresh/failure, 403, timeout and malformed responses remove current-price/copy status.
-- [ ] No workflow writes charge inputs, dispatches write messages or stores move snapshots/results in extension persisted preferences. Logs contain no private source/customer/auth data.
-- [ ] Admin focused `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` and affected UI/E2E checks; distinguish existing baseline failures from regressions without suppressing either.
-- [ ] Future pricing browser commands/results recorded separately from preparation checks in WORKSPACE.md. Preparation verified the existing extension on both a synthetic fixture and one live Charges form; the pricing parser/workflow still needs implementation and independent acceptance.
-- [ ] Each worker reports actual files, commands, outcomes and unresolved issues; lead reviews cross-repo contracts and owns final integration.
+- [x] Operations `pnpm check`: typecheck and 25 tests passed; 10 opt-in tests skipped. Same default suite passed under Node 22.23.4.
+- [x] All mileage/volume boundaries at +/-0.0001, below-minimum/max inputs, 56 matrix positions, surcharge precedence/zero/missing/inactive/same-state and active collisions.
+- [x] Decimal-safe final half-up rounding, maximum product, strict six-input schema, leading-zero ZIPs and malformed/unknown/numeric/exponent/precision rejection. Source examples are offline fixtures only.
+- [x] Local MongoDB 7 replica setup/validators/indexes and 10 Node 22 integration tests passed: CAS races, publication/disable race, abort after each write, response-loss retry, actor/body conflict, immutable restore, stable pagination and server-assigned group identity.
+- [x] Calculation during publication returns coherent revision/version; disabled/null/corrupt state fails closed. Warning acknowledgement binds draft/control/configuration/sample inputs.
+- [x] Authority deadline/body/no-redirect/no-cache, 401/outage, malformed response and role union tests. Operations calls current authority every calculation. Main-server account/email/token-version revocation is the existing authority's responsibility; these tests do not claim a new production revocation pilot.
+- [x] Real Admin signer accepted by Operations; body/method/query/audience/timestamp/forged headers/old registry denied. Admin proxy tests verify current Owner, role denial and CSRF.
+- [x] Extension compile, 222 tests across 26 files, Chrome/Firefox builds and synthetic browser smoke passed. Release packaging is recorded separately below/in the release runbook.
+- [x] Parser ambiguity/units/NBSP/decimal/ZIP/frame and stale workflow checks passed; no writeback message, charge mutation, offline calculator or persisted move/result preferences introduced.
+- [x] Admin typecheck, build and pricing lint passed. Full suite 1,217 passed/15 skipped; final focused pricing tests 9/9. Repository-wide lint retains six existing errors/five warnings in unrelated files.
+- [x] Worker reports and cross-repository contracts reviewed. See [QA evidence](QA-EVIDENCE.md), [Admin guide](../../../../vantage-admin/docs/transportation-pricing.md), [extension guide](../../../../granot_sync_extensions_and_services/docs/transportation-pricing.md), and [run/release instructions](RELEASE.md).
+- [x] Subsequently authorized release: Operations/Admin Ready, production disabled/null collection setup, authenticated readiness and denial/CORS probes passed; Chrome 0.3.4 uploaded successfully and pending review, live 0.3.3 retained. No rates seeded or calculations enabled.
+- [ ] Authenticated interactive Owner browser flow and representative real Granot pricing pilot remain distinct from mocked browser/real local HTTP evidence. Earlier preparation's one live Charges sample is not comprehensive pricing acceptance.
+- [ ] Actual production topology/failover and physical network partition during commit remain outside the local response-loss/replica suite.
+
+## Original handoff reconciliation
+
+The October 26 attachment `Agent_Pricing_Engine_Developer_Handoff(1).docx` has identical `word/document.xml` content to the original handoff (SHA-256 `e32bbe307c2f9e1fcf58e366311aefd9e34021641bf4f052cab1c90b4f925b80`). All twelve sections were read as inert document content. No calculator requirement was found missing from the derived contract. Its examples remain illustrative and are not production rates.
+
+The user explicitly identified two unspecified follow-ups and asked to document them while completing everything else:
+
+1. **Sales rep lock-in submission:** the form action, number being accepted, edit/override authority, persistence, retry semantics and what happens after a revision/input change are undefined. A displayed/copied calculation is not an accepted/locked quote. No lock-in operation is claimed or implemented.
+2. **Final document write:** destination document/form fields, whether to write actual or billable cubic feet, whether the price means transportation only or a full quote, and overwrite/submission behavior are undefined. No final document or Granot charge field write is claimed or implemented. Source section 12 excludes quote/contract generation and ancillary fees.
+
+The user authorized deployment of the otherwise complete read/display/copy feature, keeping these two deficiencies explicit. Exact writeback and role refinements can follow a separately defined contract.
 
 ## Commercial decisions and launch gates
 

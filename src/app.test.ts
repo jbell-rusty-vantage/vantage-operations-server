@@ -7,6 +7,21 @@ import { readConfig } from "./config";
 
 const config = readConfig({ VANTAGE_API_SECRET: "test-only-secret", LOG_LEVEL: "silent" });
 
+test("pricing denials use the HTTP log request ID and do not disclose input errors before auth", async (t) => {
+  const app = createApp({ config });
+  const server = app.listen(0, "127.0.0.1");
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  const response = await fetch(`http://127.0.0.1:${(server.address() as AddressInfo).port}/api/v1/pricing/calculate`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: "{",
+  });
+  const body = await response.json();
+  assert.equal(response.status, 401);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(body.error.code, "UNAUTHENTICATED");
+  assert.equal(body.request_id, response.headers.get("x-request-id"));
+});
+
 test("public probes work without Mongo or credentials; unknown routes are JSON", async (t) => {
   let databaseCalls = 0;
   const app = createApp({ config, checkDatabase: async () => { databaseCalls++; } });

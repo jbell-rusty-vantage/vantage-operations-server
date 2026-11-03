@@ -1,6 +1,6 @@
 # Granot extension transportation pricing integration
 
-Status: implementation specification, October 25, 2026. No pricing runtime or extension change is implemented by this document. The Owner's DOCX sections 1-12 define the pricing policy; [PLAN.md](PLAN.md) defines the independent service boundary. This feature calculates transportation only in `vantage-operations-server`; the extension reads and displays. Existing Enrichment, Tariff Adjustment and Binding Estimate Fee retain their existing behavior.
+Status: extension implementation reconciled and locally verified October 26, 2026; see [extension evidence](../../../granot_sync_extensions_and_services/docs/transportation-pricing.md). The Owner's DOCX sections 1-12 define the pricing policy; [PLAN.md](PLAN.md) defines the independent service boundary. This feature calculates transportation only in `vantage-operations-server`; the extension reads, displays and copies. Existing Enrichment, Tariff Adjustment and Binding Estimate Fee retain their existing behavior. The Owner source does not identify a Granot writeback field; no charge write is implemented.
 
 ## Evidence and limits
 

@@ -9,6 +9,8 @@ export interface RuntimeConfig {
   corsOrigins: string[];
   port: number;
   logLevel: string;
+  mainServerAuthBaseUrl?: string;
+  operationsAdminSigningSecret?: string;
 }
 
 function commaList(value: string | undefined): string[] {
@@ -42,5 +44,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig 
     corsOrigins: commaList(env.CORS_ALLOWED_ORIGINS),
     port,
     logLevel,
+    mainServerAuthBaseUrl: env.MAIN_SERVER_AUTH_BASE_URL?.trim() || undefined,
+    operationsAdminSigningSecret: env.OPERATIONS_ADMIN_SIGNING_SECRET?.trim() || undefined,
   };
 }

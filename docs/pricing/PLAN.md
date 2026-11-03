@@ -19,7 +19,7 @@ Implement the Owner's deterministic transportation rate policy for the browser e
 - Multiply billable CF by the combined rate using decimal-safe arithmetic. Preserve actual and billable volume separately.
 - Output is transportation price only. Ancillary fees, Binding Estimate Fee, discounts, inventory calculation, mapping, deposits, and quote/contract generation remain excluded.
 
-The calculator is not yet implemented. This repository currently supplies its server foundation only.
+The calculator, persistence, protected APIs, Admin workflow and extension workspace are implemented locally as of October 26, 2026. [The ledger](workspace/IMPLEMENTATION-CHECKLIST.md) records reconciled checks; [the runbook](workspace/RELEASE.md) separates local use from the still-pending production release.
 
 ## Decisions before feature implementation
 

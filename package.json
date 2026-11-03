@@ -12,12 +12,14 @@
     "dev": "node --env-file-if-exists=.env --import tsx ops/dev-server.ts",
     "dev:vercel": "vercel dev",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/app.test.ts src/config.test.ts src/db.test.ts",
+    "test": "node --import tsx --test src/app.test.ts src/config.test.ts src/db.test.ts src/services/pricing/*.test.ts tests/integration/*.test.ts",
     "check": "pnpm typecheck && pnpm test",
     "build": "pnpm typecheck",
-    "dev:stack": "node ops/local-stack.mjs"
+    "dev:stack": "node ops/local-stack.mjs",
+    "pricing:setup": "node --import tsx ops/pricing-setup.ts"
   },
   "dependencies": {
+    "bson": "7.2.0",
     "cors": "2.8.6",
     "express": "5.2.1",
     "helmet": "8.1.0",

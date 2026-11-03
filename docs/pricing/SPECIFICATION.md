@@ -1,6 +1,6 @@
 # Transportation pricing specification
 
-Status: proposed engineering contract, 2026-10-25. The calculator, pricing collections, and routes described here are **not implemented**. [PLAN.md](PLAN.md) records the independent-service decision. [EXTENSION.md](EXTENSION.md) defines the browser integration.
+Status: engineering contract implemented locally and reconciled 2026-10-26; Operations/Admin deployment completed October 26; commercial approval and calculation enablement remain pending. [PLAN.md](PLAN.md) records the independent-service decision. [EXTENSION.md](EXTENSION.md) defines the browser integration. Actual checks and limits are in [the implementation ledger](workspace/IMPLEMENTATION-CHECKLIST.md).
 
 ## Authority and scope
 
@@ -115,7 +115,7 @@ Calculation reads the singleton from primary with majority concern, then loads t
 
 ## Proposed API
 
-All routes below are new and unimplemented. Prefix `/api/v1/pricing`; JSON responses have `{ok:true,data:...}` or `{ok:false,error:{code,message,fields?},request_id}`. Auth precedes detailed input/configuration error disclosure. Errors never include tokens, Mongo driver text, or credentials. Set `Cache-Control: no-store`; body limit 256 KiB for configuration and a smaller calculation route limit. Configure CORS with exact extension/Admin origins; CORS is not authentication.
+All routes below are implemented under `/api/v1/pricing`; JSON responses have `{ok:true,data:...}` or `{ok:false,error:{code,message,fields?},request_id}`. Auth precedes detailed input/configuration error disclosure. Errors never include tokens, Mongo driver text, or credentials. Set `Cache-Control: no-store`; body limit 256 KiB for configuration and 8 KiB for calculation. Configure CORS with exact extension/Admin origins; CORS is not authentication.
 
 | Method/path | Actor | Behavior |
 | --- | --- | --- |
@@ -242,4 +242,4 @@ Release gates requiring explicit decisions/evidence:
 6. Explicit nonproduction collection/index/transaction verification; deployment to its separate Vercel project; authenticated health and unauthorized denial; no existing main-server writes introduced.
 7. Owner reviews matrix discontinuities and representative manual comparisons. Publish approved revision, then separately enable for an authorized pilot; operational disable/rollback must be exercised. Broad Sales access follows pilot acceptance.
 
-This document describes planned behavior; it does not claim the pricing feature is implemented. Production enablement waits for these policy/integration gates; runtime changes require the repository's `pnpm check`.
+Local implementation and checks are recorded in the workspace ledger. Production enablement still waits for these policy/integration gates; runtime changes require the repository's `pnpm check`.

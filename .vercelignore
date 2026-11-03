@@ -1,0 +1,12 @@
+node_modules
+.env
+.env.*
+!.env.example
+.local
+.git
+tests
+docs
+coverage
+*.log
+*.tsbuildinfo
+scripts

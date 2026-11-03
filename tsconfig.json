@@ -9,5 +9,5 @@
     "noEmit": true,
     "types": ["node", "express-serve-static-core"]
   },
-  "include": ["api/**/*.ts", "src/**/*.ts", "ops/**/*.ts"]
+  "include": ["api/**/*.ts", "src/**/*.ts", "ops/**/*.ts", "tests/**/*.ts"]
 }

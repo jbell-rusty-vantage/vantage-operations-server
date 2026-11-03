@@ -1,6 +1,11 @@
 import cors from "cors";
 import express, { type ErrorRequestHandler, type Request, type Response, type NextFunction } from "express";
 import helmet from "helmet";
+import mongoose from 'mongoose';
+import { createMongoConnection } from './db';
+import { PricingStore } from './services/pricing/store';
+import { pricingRouter } from './services/pricing/router';
+import type { AuthOptions } from './services/pricing/auth';
 import { readConfig, SERVICE_NAME, type RuntimeConfig } from "./config";
 import { createDatabaseReadinessCheck } from "./db";
 import { createHttpLogger, createLogger } from "./logger";
@@ -9,6 +14,8 @@ import { requireApiSecret } from "./middleware/require-api-secret";
 interface AppOptions {
   config?: RuntimeConfig;
   checkDatabase?: () => Promise<void>;
+  pricingStore?: PricingStore;
+  pricingAuth?: AuthOptions;
 }
 
 export function createApp(options: AppOptions = {}) {
@@ -40,8 +47,16 @@ export function createApp(options: AppOptions = {}) {
       res.status(503).json({ ok: false, error: "DATABASE_UNAVAILABLE" });
     }
   });
-  // Future feature routers must install their own actor authentication.
-  // The diagnostic secret above is deliberately scoped to readiness only.
+  const connectMongo = createMongoConnection(config);
+  const pricingStore = options.pricingStore ?? new PricingStore(async () => {
+    await connectMongo();
+    if (!mongoose.connection.db) throw new Error('Database unavailable');
+    return mongoose.connection.db;
+  });
+  app.use('/api/v1/pricing', pricingRouter(pricingStore, options.pricingAuth ?? {
+    mainServerAuthBaseUrl: config.mainServerAuthBaseUrl,
+    operationsAdminSigningSecret: config.operationsAdminSigningSecret,
+  }));
   app.use(express.json({ limit: "1mb" }));
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ ok: false, error: "NOT_FOUND" });
