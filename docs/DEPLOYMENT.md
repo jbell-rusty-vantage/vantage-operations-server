@@ -2,6 +2,15 @@
 
 The independent pricing API is deployed. Production calculations remain disabled with no active revision or rates. The original scaffold evidence is retained below.
 
+## Mongo Health release November 3 2026
+
+- Feature commit `3fe7f046cba9ea4334cce3039d0857bfef5a21cf` on `main`, after the deployed-pricing checkpoint `a2dcbf3`. Vercel deployment `dpl_FifC2zQwdZBW9z31P1gginjbvQuu` is Ready and serves the production Operations alias.
+- `pnpm check`: strict typecheck passed; 29 offline tests passed and the 10 existing opt-in replica tests skipped. New coverage includes auth denials before reads, separate signature scopes, expiry/tampering, cache coalescing/TTL/retries and safe partial readings.
+- Through the authenticated production Admin Owner BFF at 12:46 p.m. America/New_York, summary, collection inventory and `form_leads` index details each returned 200/no-store. All four summary probes were available; all 125 live collections returned storage readings; the selected collection returned 31 index definitions and usage readings. The collection count is an observation, not a fixed contract.
+- Public liveness remains 200; unsigned Mongo Health and pricing configuration remain 401. Admin's authenticated pricing configuration remains 200. No pricing setup, publication, enablement or other business-data writes were performed for this release.
+- [Systems → Mongo Health](https://vantage-admin-rho.vercel.app/systems), Admin feature commit `b10972f`, deployment `dpl_8emtSVZXWGYqB2kZJEfkh5Y4Fd7S`; its deployed billing safeguards were separately checkpointed as `7ef1927` before the feature. Desktop/mobile search, expansion and error-free rendering were verified in a real browser.
+- The [Mongo Health contract](mongo-health.md) records sampling limits and metrics deliberately outside this release. The Codex Atlas app is not a runtime dependency.
+
 ## Git checkpoint November 3 2026
 
 The October 26 pricing implementation was still uncommitted on local `main`. Before adding Mongo Health, source SHA-1 checks against deployment `dpl_9dDFzQPizWVtDqLw5kf5v1E55Cuu` matched `src/app.ts`, `src/config.ts`, all six pricing runtime modules, `package.json` and `pnpm-lock.yaml` exactly. Production health returned 200 and unsigned pricing configuration returned 401. `pnpm check` passed typechecking and 25 offline tests (10 opt-in replica tests skipped). The Owner authorized committing and pushing this deployed baseline separately. No production rate configuration or enablement was changed by this checkpoint.
